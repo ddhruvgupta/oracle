@@ -1,0 +1,9 @@
+alter session set nls_timestamp_format = 'DD-MON-YYYY HH24:MI:SS';
+
+SELECT to_char(logtime,'dd/mm/yyyy') as dt, extract(hour from cast(to_char(logtime, 'DD-MON-YYYY HH24:MI:SS')
+  as timestamp)), Count(ENDPOINTID) AS CountOfENDPOINTID
+FROM IDREADINGLOGS
+WHERE packetypeid = 8 AND logtime > '2017-05-20'
+GROUP BY to_char(logtime,'dd/mm/yyyy'), extract(hour from cast(to_char(logtime, 'DD-MON-YYYY HH24:MI:SS')
+  as timestamp))
+ORDER BY 1,2; 
