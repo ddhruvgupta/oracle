@@ -1,0 +1,7 @@
+SELECT to_char(logtime,'dd/mm/yyyy') as dt, extract(hour from cast(to_char(logtime, 'DD-MON-YYYY HH24:MI:SS')
+  as timestamp)) Heure, EVENTTYPEID,Count(ENDPOINTID) AS CountOfENDPOINTID,eventtext
+FROM eventlog
+WHERE logtime = '24-MAY-2017'
+GROUP BY to_char(logtime,'dd/mm/yyyy'), extract(hour from cast(to_char(logtime, 'DD-MON-YYYY HH24:MI:SS')
+  as timestamp)),EVENTTYPEID,eventtext
+ORDER BY 1,2; 
