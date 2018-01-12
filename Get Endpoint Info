@@ -1,0 +1,34 @@
+select 
+b.commandresponseid,
+b.responsedatetime,
+--substr(b.response,a.msg3,4) as "Control Byte 1",
+substr(b.response,a.msg+175,4) as "Control Byte 3",
+case when to_char(substr(b.response,a.msg2+371,2)) = 'No' then 'No' else 'Yes' end as "Use For Routing",
+
+'Control Byte 3: ' || substr(b.response,a.msg+175,4) || 
+', Battery Backed: ' || substr(b.response,a.msg3+371,1) ||
+', Use For Routing: ' || substr(b.response,a.msg2+371,1) ||
+', Preferred Node: ' || substr(b.response,a.msg4+371,1) ||
+', Replace Universal TOP: ' || substr(b.response,msg5+377,1) ||
+', Disable Registration: ' || substr(b.response,msg6+377,1) ||
+', Disable Syncs: ' || substr(b.response,msg7+370,1) ||
+', Disable TOP Advertisement: ' || substr(b.response,msg8+366,1) ||
+', Disable BEP: ' || substr(b.response,msg9+368,1) AS "Control Byte 3 Message"
+
+from(
+  select  commandresponseid commandresponseid,
+          instr(response,'<messageKey>ControlByteThreeText</messageKey>') as msg,
+          instr(response,'<messageKey>UseForRouting</messageKey>') as msg2,
+          instr(response,'<messageKey>BatteryBacked</messageKey>') as msg3,
+          instr(response,'<messageKey>PreferredNode</messageKey>') as msg4,
+          instr(response,'<messageKey>ReplaceUniversalTOP</messageKey>') as msg5,
+          instr(response,'<messageKey>DisableRegistration</messageKey>') as msg6,
+          instr(response,'<messageKey>DisableSyncs</messageKey>') as msg7,
+          instr(response,'<messageKey>TOPDelay</messageKey>') as msg8,
+          instr(response,'<messageKey>BEPDisable</messageKey>') as msg9
+
+from commandresponse
+where RESPONSE like '%LandisGyr.CommandCenter.RFUGetEndpointInfo%') a
+join commandresponse b on b.commandresponseid=a.commandresponseid
+order by 2 desc
+; 
