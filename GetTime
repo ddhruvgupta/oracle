@@ -1,0 +1,20 @@
+alter session set current_schema = centralservices;
+
+select 
+c.endpointid,
+b.responsedatetime,
+substr(b.response,a.msg+168,20) as "meterTime",
+substr(b.response,a.msg2+171,20) as "endpointTime"
+from(
+select  commandresponseid commandresponseid,
+          instr(response,'<messageKey>MeterTimeText</messageKey>') as msg,
+          instr(response,'<messageKey>EndpointTimeText</messageKey>') as msg2
+          from commandresponse
+          where 
+          RESPONSE like '%LandisGyr.CommandCenter.Common.RFUGetTime%') a
+join commandresponse b on b.commandresponseid=a.commandresponseid
+join commandssent c on c.commandlogid = b.commandlogid
+join endpoints e on e.endpointid= c.endpointid
+join meters m on m.meterid=e.meterid
+where m.meterno in ()
+;
