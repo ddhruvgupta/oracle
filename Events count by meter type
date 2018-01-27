@@ -1,0 +1,62 @@
+SELECT  ENDPOINTMODELS.name             "Type", 
+        --METERPROGRAMS.meterprogramid    "Program Id",
+        --METERPROGRAMS.programname       "Program Name",
+        --METERPROGRAMS.meterprogramcrc   "CRC",
+        --EVENTTYPES.eventtypeid          "Event TypeId",
+        --trunc(EVENTLOG.eventdate)       "Date",
+        --EVENTTYPES.name                 "Event Name",
+        count(distinct(meters.meterno)) "Distinct Events",
+        count(*)                        "Total Events",
+----------------------------------------------------------------------------------------------------------------------------------------------            
+(SELECT count(*)
+FROM   centralservices.ENDPOINTS bENDPOINTS 
+       left outer join centralservices.RFENDPOINTPROPERTIES bRFENDPOINTPROPERTIES                 on bENDPOINTS.endpointid = bRFENDPOINTPROPERTIES.endpointid
+       left outer join centralservices.ENDPOINTMODELS bENDPOINTMODELS                             on bENDPOINTS.hwmodelid = bENDPOINTMODELS.endpointmodelid
+       left outer join centralservices.meters bmeters                                             on bENDPOINTS.meterid = bMETERS.meterid
+       left outer join CENTRALSERVICES.STATUSCODES bSTATUSCODES                                   on bENDPOINTS.statuscodeid = bSTATUSCODES.statuscodeid
+       left outer join CENTRALSERVICES.BILLINGCYCLES bBILLINGCYCLES                               on bMETERS.billingcycleid = bBILLINGCYCLES.billingcycleid
+       left outer join CENTRALSERVICES.COLLECTORS bCOLLECTORS                                     on bENDPOINTS.spuid = bCOLLECTORS.collectorID
+       left outer join CENTRALSERVICES.SERVICELOCATIONS bSERVICELOCATIONS                         on bMETERS.servicelocationid = bSERVICELOCATIONS.servicelocationid
+       left outer join CENTRALSERVICES.ADDRESS bADDRESS                                           on bSERVICELOCATIONS.addressid = bADDRESS.addressid
+       left outer join CENTRALSERVICES.ENDPOINTDEPLOYMENTSTATISTICS bENDPOINTDEPLOYMENTSTATISTICS on bENDPOINTS.endpointid = bENDPOINTDEPLOYMENTSTATISTICS.endpointid
+       left outer join CENTRALSERVICES.GPSLOCATIONS bGPSLOCATIONS                                 on bSERVICELOCATIONS.gpslocationid = bGPSLOCATIONS.gpslocationid
+       left outer join CENTRALSERVICES.ENDPOINTMETERCONFIGURATION bENDPOINTMETERCONFIGURATION     on bENDPOINTS.endpointid = bENDPOINTMETERCONFIGURATION.endpointid
+       left outer join CENTRALSERVICES.MeterConfiguration bMeterConfiguration                     on bEndpointMeterConfiguration.meterConfigurationId = bMeterConfiguration.meterConfigurationId
+                left outer join CENTRALSERVICES.METERPROGRAMS bMETERPROGRAMS                               on bENDPOINTMETERCONFIGURATION.meterprogramid = bMETERPROGRAMS.meterprogramid
+WHERE          bSTATUSCODES.name = 'Normal' and
+       not(bAddress.addressline1 is NULL) and
+                                 not(substr(bMETERS.meterno,0,1)='M') and                 
+                                 bBILLINGCYCLES.name <> 'DEVICE' and
+       ENDPOINTMODELS.name = bENDPOINTMODELS.name  
+       --METERPROGRAMS.meterprogramid = bMETERPROGRAMS.meterprogramid and
+       --METERPROGRAMS.programname = bMETERPROGRAMS.programname and
+       --METERPROGRAMS.meterprogramcrc =bMETERPROGRAMS.meterprogramcrc
+       )  "Deployed Meters"
+----------------------------------------------------------------------------------------------------------------------------------------------            
+FROM    centralservices.EVENTLOG
+        left outer join centralservices.endpoints on EVENTLOG.endpointid = ENDPOINTS.endpointid
+        left outer join centralservices.EVENTTYPES on EVENTLOG.eventtypeid = EVENTTYPES.eventtypeid
+        left outer join CENTRALSERVICES.METERS on ENDPOINTS.meterid = METERS.meterid
+        left outer join CENTRALSERVICES.STATUSCODES on ENDPOINTS.statuscodeid = STATUSCODES.statuscodeid
+        left outer join CENTRALSERVICES.RFENDPOINTPROPERTIES on ENDPOINTS.endpointid = RFENDPOINTPROPERTIES.endPointId
+        left outer join CENTRALSERVICES.CUSTOMERS on METERS.customerid = CUSTOMERS.customerid
+        left outer join CENTRALSERVICES.SERVICELOCATIONS on METERS.servicelocationid = SERVICELOCATIONS.servicelocationid
+        left outer join centralservices.ENDPOINTMODELS on     ENDPOINTS.hwmodelid = ENDPOINTMODELS.endpointmodelid
+        left outer join CENTRALSERVICES.GPSLOCATIONS on SERVICELOCATIONS.gpslocationid = GPSLOCATIONS.gpslocationid
+        left outer join CENTRALSERVICES.ADDRESS on SERVICELOCATIONS.addressid = ADDRESS.addressid
+        left outer join CENTRALSERVICES.ENDPOINTDEPLOYMENTSTATISTICS on ENDPOINTS.endpointid = ENDPOINTDEPLOYMENTSTATISTICS.endpointid
+        left outer join CENTRALSERVICES.BILLINGCYCLES on METERS.billingcycleid = BILLINGCYCLES.billingcycleid   
+        left outer join CENTRALSERVICES.COLLECTORS on ENDPOINTS.spuid = COLLECTORS.collectorID
+                                  left outer join centralservices.ENDPOINTMODELS on                      ENDPOINTS.hwmodelid = ENDPOINTMODELS.endpointmodelid  
+                 left outer join CENTRALSERVICES.ENDPOINTMETERCONFIGURATION on ENDPOINTS.endpointid = ENDPOINTMETERCONFIGURATION.endpointid
+                 left outer join CENTRALSERVICES.METERPROGRAMS on ENDPOINTMETERCONFIGURATION.meterprogramid = METERPROGRAMS.meterprogramid           
+WHERE   EVENTLOG.eventdate >= '26-DEC-2017' and
+        EVENTTYPES.eventtypeid= '1366'
+GROUP BY EVENTTYPES.eventtypeid,
+         EVENTTYPES.name,
+         --trunc(EVENTLOG.eventdate),
+         ENDPOINTMODELS.name 
+         --METERPROGRAMS.meterprogramid,
+         --METERPROGRAMS.programname,
+         --METERPROGRAMS.meterprogramcrc   
+--ORDER BY    trunc(EVENTLOG.eventdate) desc;
