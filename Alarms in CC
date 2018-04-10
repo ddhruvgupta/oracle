@@ -1,0 +1,20 @@
+select rfa.name
+,rfadetails.*
+,alarms.name alarm_name
+,p.NAME log_level
+,alarms.ENDPOINTMODELID
+,epm.name
+from RFALARMDEFINITIONDETAILS  rfadetails 
+left join rfalarmdefinitions rfa on rfa.RFALARMDEFINITIONID = rfadetails.RFALARMDEFINITIONID
+left join rfalarmtypes alarms on rfadetails.eventtypeid = alarms.EVENTTYPEID
+left join RFALARMPRIORITY p on p.RFALARMPRIORITYID=rfadetails.RFALARMPRIORITYID
+left join endpointmodels epm on epm.ENDPOINTMODELID=alarms.ENDPOINTMODELID
+where rfa.RFALARMDEFINITIONID in (
+select rfalarmdefinitionid from CENTRALSERVICES.RFCONFIGURATIONGROUPS 
+where groupid in (
+select CONFIGURATIONGROUPID 
+from endpoints 
+where statuscodeid = 8 and CONFIGURATIONGROUPID is not null 
+group by CONFIGURATIONGROUPID)
+and RFALARMDEFINITIONID is not null
+)
