@@ -1,0 +1,13 @@
+select groupid from CentralServices.groups where name='G5i Commercial Gas Configuration A'  --Replace with your Custom Group
+order by grouptypeid; --Get groupid For our Test Case.    ---------->#A
+
+select * from endpointmodels where lower(name) like lower('%Commercial gas%'); --The endpointmodelid here equates to hwmodelid
+--GPR hw model ids=65598 for GSP and 65653 for SBS        ---------->#B
+--GPR EndpointModelFamilyID is 65598                      ---------->#C                
+
+select * from CentralServices.orgdefaultgroups; --Here the Grouptypeid =41 controls the default groups for all the endpoints coming in.
+
+update CentralServices.orgdefaultgroups set groupid = #A      -- *ALPHA*
+where endpointmodelfamilyid = #C --Family of all Commercial Meters
+                                and hwmodelid in (#B)
+                                and grouptypeid = 41;    --Default Config Group for all endpoints
