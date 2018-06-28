@@ -1,0 +1,28 @@
+alter session set nls_date_format = 'DD-MON-YYYY HH24:MI:SS';
+
+select * from centralservices.collectors where name like 'WIC_FC_HARRY';
+
+--pine = 20
+--woodlawn = 18
+--E37 = 19
+--harry 17
+select meterno
+from (
+      select m.meterno
+             ,e.endpointid,
+             cl.issued as Issued_Time,  
+             cr.responsedatetime, 
+             ct.name as Command_Type,
+             CASE WHEN cr.responsedatetime >= cl.issued and cr.responsedatetime <= cl.issued+1/144 THEN 'True' ELSE 'False' END AS ISSUCCESSFUL 
+      from centralservices.endpoints e 
+            inner join centralservices.commandlog cl on cl.endpointid = e.endpointid
+            inner join centralservices.meters m on m.meterid = e.meterid
+            inner join centralservices.commandtypes ct on ct.commandtypeid = cl.commandtypeid
+            inner join centralservices.commandresponse cr on cr.commandlogid = cl.commandlogid
+            inner join centralservices.commandssent cs on cs.commandlogid = cl.commandlogid
+      where cl.commandtypeid = 153 and cl.issued > '21-OCT-2016 11:00:00' 
+           AND e.spuid in 20
+                    
+      order by 5
+    ) 
+where issuccessful = 'False';
